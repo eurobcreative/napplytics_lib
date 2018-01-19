@@ -34,33 +34,55 @@ dependencies {
 
 Your app has to required the following permissions:
 
-  - android.permission.INTERNET,
-  - android.permission.ACCESS_COARSE_LOCATION,
-  - android.permission.READ_PHONE_STATE,
-  - android.permission.ACCESS_NETWORK_STATE
+  - ```android.permission.INTERNET```
+  - ```android.permission.ACCESS_COARSE_LOCATION```
+  - ```android.permission.READ_PHONE_STATE```
+  - ```android.permission.ACCESS_NETWORK_STATE```
 
+
+<b>API</b>
+
+The API of this library provides the following methods to calculate the most appropriate protocol for Web Browsing and Video Streaming services, respectively:
+
+```
+public static void calculateWebBrowsingService(Context context);
+```
+
+```
+public static void calculateVideoStreamingService(Context context);
+```
 
 <b>Results</b>
 
-To receive the results you must register a BroadcastReceiver,
+To receive the results you must register a BroadcastReceiver, adding the actions ```WEB_BROWSING_ACTION``` and ```VIDEO_STREAMING_ACTION```, as in:
 
-  - Final result: "result",
-  - Throughput: "throughput_result",
-  - Satisfaction Index Throught = "si_throughput_result",
-  - RSSI = "rssi_result",
-  - Satisfaction Index RSSI = "si_rssi_result",
-  - RSRP = "rsrp_result",
-  - Satisfaction Index RSRP = "si_rsrp_result"
-  
-  In case of Web Browsing:
-  
-  - HTTP1_1 = "http1_1_result",
-  - HTTP1_1_TLS = "http1_1_tls_result",
-  - HTTP2 = "http2_result"
-  
-  In case of Video Streaming:
-  
-  - HTTP = "http_result",
-  - RTSP = "rtsp_result"
+```
+IntentFilter intentFilter = new IntentFilter();
+intentFilter.addAction(WEB_BROWSING_ACTION);
+intentFilter.addAction(VIDEO_STREAMING_ACTION);
+registerReceiver(broadcastReceiver, intentFilter);
+LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
+```
 
+Then, the results will be provided in the following tags:
+
+  - Throughput: ```THROUGHPUT_RESULT```
+  - Satisfaction Index Throughput: ```SI_THROUGHPUT_RESULT```
+  - RSSI: ```RSSI_RESULT```
+  - Satisfaction Index RSSI: ```SI_RSSI_RESULT```
+  - RSRP: ```RSRP_RESULT```
+  - Satisfaction Index RSRP: ```SI_RSRP_RESULT```
+  
+  In the case of Web Browsing:
+  
+  - HTTP1_1: ```HTTP1_1_RESULT```
+  - HTTP1_1_TLS: ```HTTP1_1_TLS_RESULT```
+  - HTTP2: ```HTTP2_RESULT```
+  
+  In the case of Video Streaming:
+  
+  - HTTP: ```HTTP_RESULT```
+  - RTSP: ```RTSP_RESULT```
+  
+  The protocol chosen by this library will be provided in ```RESULT```.
   
