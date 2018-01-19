@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">NApplyticsLib</string>
+
+    <string name="web_browsing_result">Web Browsing:\n\nThroughput = %1$d kbps \nRSSI = %2$d dBm \nRSRP = %3$d dBm
+        \n\nSI_Throughput = %4$s \nSI_RSSI = %5$s \nSI_RSRP = %6$s
+        \n\nThe results obtained are:\nHTTP 1.1 = %7$s \nHTTP 1.1 TLS = %8$s \nHTTP 2 = %9$s
+        \n\nThe best option is: %10$s</string>
+
+    <string name="video_streaming_result">Video Streaming:\n\nNetwork type: %1$s\n\nThroughput = %2$d Mbps \nRSSI = %3$d dBm \nRSRP = %4$d dBm
+        \n\nSI_Throughput = %5$s \nSI_RSSI = %6$s \nSI_RSRP = %7$s
+        \n\nThe results obtained are:\nHTTP = %8$s \nRTSP = %9$s
+        \n\nThe best option is: %10$s</string>
 </resources>

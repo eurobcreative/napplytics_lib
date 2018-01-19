@@ -40,41 +40,57 @@ import com.google.android.exoplayer2.util.Util;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
 import java.util.List;
 
-public class CustomPhoneStateListener extends PhoneStateListener implements AdaptiveMediaSourceEventListener, BandwidthMeter.EventListener, Player.EventListener{
-    public static String LOG_TAG = "NAPPLYTICS";
+public class CustomPhoneStateListener extends PhoneStateListener implements AdaptiveMediaSourceEventListener,
+        BandwidthMeter.EventListener, Player.EventListener{
+    private static String LOG_TAG = "NAPPLYTICS";
 
     /**
      * Keep track of the task to ensure we can cancel it if requested.
      */
-    public static CallServer callServer = null;
+    private static CallServer callServer = null;
 
+    // General Results
     public static final String RESULT = "result";
+    public static final String THROUGHPUT_RESULT = "throughput_result";
+    public static final String SI_THROUGHPUT_RESULT = "si_throughput_result";
+    public static final String RSSI_RESULT = "rssi_result";
+    public static final String SI_RSSI_RESULT = "si_rssi_result";
+    public static final String RSRP_RESULT = "rsrp_result";
+    public static final String SI_RSRP_RESULT = "si_rsrp_result";
+    // Web Browsing Results
+    public static final String HTTP1_1_RESULT = "http1_1_result";
+    public static final String HTTP1_1_TLS_RESULT = "http1_1_tls_result";
+    public static final String HTTP2_RESULT = "http2_result";
+    // Video Streaming Results
+    public static final String HTTP_RESULT = "http_result";
+    public static final String RTSP_RESULT = "rtsp_result";
 
-    public static int HTTP = 0;
-    public static int VIDEO = 1;
+    protected static final int WEB_BROWSING_OPTION = 0;
+    protected static final int VIDEO_STREAMING_OPTION = 1;
     private static int option = -1;
 
-    public int network_type = VideoUtils.HSPA_NETWORK;
+    private int network_type = VideoStreamingUtils.HSPA_NETWORK;
 
-    public static long total_size = 0;
+    private long total_size = 0;
     private long total_ms = 0;
 
-    public static long throughput = -1;
+    private static long throughput = -1;
     private static int rssi = 1;
     private static int rsrp = 1;
 
 
     private static Context mContext;
-    public static boolean access = false;
+    private static boolean access = false;
 
 
-    public static DataSource.Factory mediaDataSourceFactory;
-    public static SimpleExoPlayer player;
-    public static DefaultTrackSelector trackSelector;
-    public static boolean shouldAutoPlay;
-    public static BandwidthMeter bandwidthMeter;
+    private static DataSource.Factory mediaDataSourceFactory;
+    private static SimpleExoPlayer player;
+    private static DefaultTrackSelector trackSelector;
+    private static boolean shouldAutoPlay;
+    private static BandwidthMeter bandwidthMeter;
 
 
     public CustomPhoneStateListener(Context context, int option, int network_type) {
@@ -119,14 +135,14 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
                 }
             }
 
-            if (option == HTTP) {
-                Log.d("Result", "Http: Call Server");
+            if (option == WEB_BROWSING_OPTION) {
+                Log.d("Result", "Web Browsing: Call Server");
                 callServer = new CallServer();
                 callServer.execute((Void[]) null);
 
-            } else if (option == VIDEO) {
-                Log.d("Result", "Video: Init Player");
-                callVideo();
+            } else if (option == VIDEO_STREAMING_OPTION) {
+                Log.d("Result", "Video Streaming: Init Player");
+                callVideoStreaming();
 
             } else {
                 // Do nothing
@@ -154,7 +170,7 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
         }
     }
 
-    // WEB
+    // WEB BROWSING
     private class CallServer extends AsyncTask<Void, Void, Long> {
         CallServer() {}
 
@@ -162,10 +178,10 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
         protected Long doInBackground(Void... params) {
             Long success = null;
 
-            boolean isConnected = HttpUtils.isNetworkAvailable(mContext);
+            boolean isConnected = WebBrowsingUtils.isNetworkAvailable(mContext);
             if (isConnected) {
                 try {
-                    throughput = HttpUtils.calculateThroughput();
+                    throughput = WebBrowsingUtils.calculateWebBrowsingThroughput();
                     success = throughput;
                 } catch (MeasurementError measurementError) {
                     measurementError.printStackTrace();
@@ -178,11 +194,34 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
         @Override
         protected void onPostExecute(final Long success) {
             if (success != null) {
-                Log.d("Result", "Http: throughput = " + throughput + ", rsrp = " + rsrp + ", rssi = " + rssi);
+                float si_throughput = WebBrowsingUtils.SIThroughputWebBrowsing(throughput);
+                float si_rsrp = WebBrowsingUtils.SIRsrpWebBrowsing(rsrp);
+                float si_rssi = WebBrowsingUtils.SIRssiWebBrowsing(rssi);
 
-                String result = HttpUtils.calculateBetterHttpMode(throughput, rsrp, rssi);
-                Intent intent = new Intent(HttpUtils.HTTP_ACTION);
+                double http1_1 = WebBrowsingUtils.calculateWebBrowsingHttp1_1(si_throughput, si_rsrp, si_rssi);
+                double http1_1tls = WebBrowsingUtils.calculateWebBrowsingHttp1_1TLS(si_throughput, si_rsrp, si_rssi);
+                double http2 = WebBrowsingUtils.calculateWebBrowsingHttp2(si_throughput, si_rsrp, si_rssi);
+
+                String result = WebBrowsingUtils.getBetterWebBrowsingService(http1_1, http1_1tls, http2);
+
+                DecimalFormat decimalFormatSI = new DecimalFormat("0.0000");
+                DecimalFormat decimalFormat = new DecimalFormat("0.000000");
+                String result_text = mContext.getResources().getString(R.string.web_browsing_result, throughput, rssi, rsrp,
+                        decimalFormatSI.format(si_throughput), decimalFormatSI.format(si_rsrp), decimalFormatSI.format(si_rssi),
+                        decimalFormat.format(http1_1), decimalFormat.format(http1_1tls), decimalFormat.format(http2), result);
+                Log.d("Result", result_text);
+
+                Intent intent = new Intent(WebBrowsingUtils.WEB_BROWSING_ACTION);
                 intent.putExtra(RESULT, result);
+                intent.putExtra(THROUGHPUT_RESULT, throughput);
+                intent.putExtra(SI_THROUGHPUT_RESULT, si_throughput);
+                intent.putExtra(RSRP_RESULT, rsrp);
+                intent.putExtra(SI_RSRP_RESULT, si_rssi);
+                intent.putExtra(RSSI_RESULT, rssi);
+                intent.putExtra(SI_RSSI_RESULT, si_rsrp);
+                intent.putExtra(HTTP1_1_RESULT, http1_1);
+                intent.putExtra(HTTP1_1_TLS_RESULT, http1_1tls);
+                intent.putExtra(HTTP2_RESULT, http2);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 
             } else {
@@ -198,8 +237,8 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
         }
     }
 
-    // VIDEO
-    public void callVideo() {
+    // VIDEO STREAMING
+    private void callVideoStreaming() {
         shouldAutoPlay = true;
         Handler eventHandler = new Handler();
         bandwidthMeter = new DefaultBandwidthMeter(eventHandler, this);
@@ -213,7 +252,7 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
 
         player.setPlayWhenReady(shouldAutoPlay);
 
-        MediaSource mediaSource = new DashMediaSource(Uri.parse(VideoUtils.URL_VIDEO), mediaDataSourceFactory,
+        MediaSource mediaSource = new DashMediaSource(Uri.parse(VideoStreamingUtils.URL_VIDEO_STREAMING), mediaDataSourceFactory,
                 new DefaultDashChunkSource.Factory(mediaDataSourceFactory), eventHandler, this);
 
         player.addListener(this);
@@ -257,7 +296,7 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
 
     @Override
     public void onBandwidthSample(int elapsedMs, long bytes, long bitrate) {
-        Log.d("VIDEO_BANDWIDTH", elapsedMs + " ms, " + bytes + " B, " + bitrate + " bitrate (bps)");
+        Log.d("VIDEO_STREAMING", "onBandwidthSample = " + elapsedMs + " ms, " + bytes + " B, " + bitrate + " bitrate (bps)");
 
         total_size += bytes;
         total_ms += elapsedMs;
@@ -293,41 +332,55 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
 
             case Player.STATE_ENDED:
                 state = "Ended";
-                Log.d("VIDEO_TOTAL_SIZE", Long.toString(total_size));
+                Log.d("VIDEO_STREAMING", "Total Size = " + total_size + " B");
 
                 throughput = ((total_size * 8) / 1000000) / (total_ms / 1000); // video_throughput -> Mbps (1000000 = 1000 x 1000)
-
-                Log.d("Result", "Video: throughput = " + throughput + ", rsrp = " + rsrp + ", rssi = " + rssi);
 
                 float si_throughput, si_rssi, si_rsrp;
                 double http, rtsp;
 
-                if (network_type == VideoUtils.LTE_NETWORK){
-                    si_throughput = VideoUtils.SIThroughputVideoLTE(throughput);
-                    si_rssi = VideoUtils.SIRssiVideoLTE(rssi);
-                    si_rsrp = VideoUtils.SIRsrpVideoLTE(rsrp);
+                if (network_type == VideoStreamingUtils.LTE_NETWORK){
+                    si_throughput = VideoStreamingUtils.SIThroughputVideoStreamingLTE(throughput);
+                    si_rssi = VideoStreamingUtils.SIRssiVideoStreamingLTE(rssi);
+                    si_rsrp = VideoStreamingUtils.SIRsrpVideoStreamingLTE(rsrp);
 
-                    http = VideoUtils.calculateVideoHttpLTE(si_throughput, si_rsrp, si_rssi);
-                    rtsp = VideoUtils.calculateVideoRTSPLTE(si_throughput, si_rsrp, si_rssi);
+                    http = VideoStreamingUtils.calculateVideoStreamingHttpLTE(si_throughput, si_rsrp, si_rssi);
+                    rtsp = VideoStreamingUtils.calculateVideoStreamingRTSPLTE(si_throughput, si_rsrp, si_rssi);
 
                 } else {
-                    si_throughput = VideoUtils.SIThroughputVideoHSPA(throughput);
-                    si_rssi = VideoUtils.SIRssiVideoHSPA(rssi);
-                    si_rsrp = VideoUtils.SIRsrpVideoHSPA(rsrp);
+                    si_throughput = VideoStreamingUtils.SIThroughputVideoStreamingHSPA(throughput);
+                    si_rssi = VideoStreamingUtils.SIRssiVideoStreamingHSPA(rssi);
+                    si_rsrp = VideoStreamingUtils.SIRsrpVideoStreamingHSPA(rsrp);
 
-                    http = VideoUtils.calculateVideoHttpHSPA(si_throughput, si_rsrp, si_rssi);
-                    rtsp = VideoUtils.calculateVideoRTSPHSPA(si_throughput, si_rsrp, si_rssi);
+                    http = VideoStreamingUtils.calculateVideoStreamingHttpHSPA(si_throughput, si_rsrp, si_rssi);
+                    rtsp = VideoStreamingUtils.calculateVideoStreamingRTSPHSPA(si_throughput, si_rsrp, si_rssi);
                 }
 
-                String result = VideoUtils.getBetterVideoMode(http, rtsp);
+                String result = VideoStreamingUtils.getBetterVideoStreamingService(http, rtsp);
 
-                Intent intent = new Intent(VideoUtils.VIDEO_ACTION);
+                DecimalFormat decimalFormatSI = new DecimalFormat("0.0000");
+                DecimalFormat decimalFormat = new DecimalFormat("0.000000");
+                String result_text = mContext.getResources().getString(R.string.video_streaming_result,
+                        VideoStreamingUtils.networkTypeArray[network_type], throughput, rssi, rsrp,
+                        decimalFormatSI.format(si_throughput), decimalFormatSI.format(si_rsrp), decimalFormatSI.format(si_rssi),
+                        decimalFormat.format(http), decimalFormat.format(rtsp), result);
+                Log.d("Result", result_text);
+
+                Intent intent = new Intent(VideoStreamingUtils.VIDEO_STREAMING_ACTION);
                 intent.putExtra(RESULT, result);
+                intent.putExtra(THROUGHPUT_RESULT, throughput);
+                intent.putExtra(SI_THROUGHPUT_RESULT, si_throughput);
+                intent.putExtra(RSRP_RESULT, rsrp);
+                intent.putExtra(SI_RSRP_RESULT, si_rssi);
+                intent.putExtra(RSSI_RESULT, rssi);
+                intent.putExtra(SI_RSSI_RESULT, si_rsrp);
+                intent.putExtra(HTTP_RESULT, http);
+                intent.putExtra(RTSP_RESULT, rtsp);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 break;
         }
 
-        Log.d("VIDEO_STATE", "PlayWhenReady: " + playWhenReady + ", State: " + state);
+        Log.d("VIDEO_STREAMING", "onPlayerStateChanged:  PlayWhenReady = " + playWhenReady + ", State = " + state);
     }
 
     @Override
