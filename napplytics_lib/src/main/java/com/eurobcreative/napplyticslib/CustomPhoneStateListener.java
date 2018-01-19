@@ -115,8 +115,7 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
     @Override
     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
         super.onSignalStrengthsChanged(signalStrength);
-
-        Log.i(LOG_TAG, "onSignalStrengthsChanged");
+        
         if (access) {
             access = false;
 
