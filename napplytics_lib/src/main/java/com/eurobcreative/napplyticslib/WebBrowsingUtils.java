@@ -38,8 +38,8 @@ public class WebBrowsingUtils {
     // The buffer size we use to read from the WEB_BROWSING_OPTION response stream
     private static final int READ_BUFFER_SIZE = 1024;
 
-    public static TelephonyManager telephonyManager;
-    public static CustomPhoneStateListener customPhoneStateListener;
+    protected static TelephonyManager telephonyManager;
+    protected static CustomPhoneStateListener customPhoneStateListener;
 
     public static void calculateWebBrowsingService(Context _context) {
         mContext = _context;
@@ -53,7 +53,7 @@ public class WebBrowsingUtils {
         telephonyManager.listen(customPhoneStateListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
     }
 
-    public static void stopPhoneStateListener() {
+    protected static void stopPhoneStateListener() {
         telephonyManager.listen(customPhoneStateListener, PhoneStateListener.LISTEN_NONE);
     }
 

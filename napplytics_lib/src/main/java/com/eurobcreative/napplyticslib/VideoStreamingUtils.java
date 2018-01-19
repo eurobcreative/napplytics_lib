@@ -13,7 +13,7 @@ public class VideoStreamingUtils {
     private static final String HTTP = "HTTP";
     private static final String RTSP = "RTSP";
 
-    public static final String URL_VIDEO_STREAMING = "http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/11/Living_Room_720p_51_51_192k_320k_25fps.mpd";
+    protected static final String URL_VIDEO_STREAMING = "http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/5/11/Living_Room_720p_51_51_192k_320k_25fps.mpd";
         //"http://www-itec.uni-klu.ac.at/ftp/datasets/DASHDataset2014/BigBuckBunny/15sec/BigBuckBunny_15s_simple_2014_05_09.mpd";
 
     private static Context mContext;
@@ -22,8 +22,8 @@ public class VideoStreamingUtils {
     protected static final int LTE_NETWORK = 1;
     protected static final String[] networkTypeArray = {"HSPA", "LTE"};
 
-    public static TelephonyManager telephonyManager;
-    public static CustomPhoneStateListener customPhoneStateListener;
+    protected static TelephonyManager telephonyManager;
+    protected static CustomPhoneStateListener customPhoneStateListener;
 
     public static void calculateVideoStreamingService(Context _context) {
         mContext = _context;
@@ -48,7 +48,7 @@ public class VideoStreamingUtils {
         telephonyManager.listen(customPhoneStateListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
     }
 
-    public static void stopPhoneStateListener() {
+    protected static void stopPhoneStateListener() {
         telephonyManager.listen(customPhoneStateListener, PhoneStateListener.LISTEN_NONE);
     }
 

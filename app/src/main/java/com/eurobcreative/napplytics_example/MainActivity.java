@@ -13,13 +13,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import com.eurobcreative.napplyticslib.WebBrowsingUtils;
-import com.eurobcreative.napplyticslib.VideoStreamingUtils;
-
 import static com.eurobcreative.napplyticslib.CustomPhoneStateListener.RESULT;
-import static com.eurobcreative.napplyticslib.WebBrowsingUtils.WEB_BROWSING_ACTION;
 import static com.eurobcreative.napplyticslib.VideoStreamingUtils.VIDEO_STREAMING_ACTION;
-import static com.eurobcreative.napplyticslib.VideoStreamingUtils.calculateVideoStreamingService;
+import static com.eurobcreative.napplyticslib.WebBrowsingUtils.WEB_BROWSING_ACTION;
+import static com.eurobcreative.napplyticslib.WebBrowsingUtils.calculateWebBrowsingService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,8 +31,6 @@ public class MainActivity extends AppCompatActivity {
                     result = intent.getStringExtra(RESULT);
                     Log.d("Result", "Web Browsing: " + result);
 
-                    WebBrowsingUtils.stopPhoneStateListener();
-
                     try {
                         unregisterReceiver(broadcastReceiver);
 
@@ -48,8 +43,6 @@ public class MainActivity extends AppCompatActivity {
                 case VIDEO_STREAMING_ACTION:
                     result = intent.getStringExtra(RESULT);
                     Log.d("Result", "Video Streaming: " + result);
-
-                    VideoStreamingUtils.stopPhoneStateListener();
 
                     try {
                         unregisterReceiver(broadcastReceiver);
@@ -74,12 +67,12 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.READ_PHONE_STATE}, 1);
 
             } else {
-                //calculateWebBrowsingService(this);
-                calculateVideoStreamingService(this);
+                calculateWebBrowsingService(this);
+                //calculateVideoStreamingService(this);
             }
         } else {
-            //calculateWebBrowsingService(this);
-            calculateVideoStreamingService(this);
+            calculateWebBrowsingService(this);
+            //calculateVideoStreamingService(this);
         }
 
         IntentFilter intentFilter = new IntentFilter();
@@ -95,8 +88,8 @@ public class MainActivity extends AppCompatActivity {
             case 1: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.i("PERMISSION", "ACCEPTED");
-                    //calculateWebBrowsingService(this);
-                    calculateVideoStreamingService(this);
+                    calculateWebBrowsingService(this);
+                    //calculateVideoStreamingService(this);
 
                 } else {
                     Log.i("PERMISSION", "DENIED");

@@ -116,6 +116,7 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
         super.onSignalStrengthsChanged(signalStrength);
 
+        Log.i(LOG_TAG, "onSignalStrengthsChanged");
         if (access) {
             access = false;
 
@@ -223,6 +224,8 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
                 intent.putExtra(HTTP1_1_TLS_RESULT, http1_1tls);
                 intent.putExtra(HTTP2_RESULT, http2);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
+                WebBrowsingUtils.stopPhoneStateListener();
 
             } else {
                 //Error
@@ -377,6 +380,8 @@ public class CustomPhoneStateListener extends PhoneStateListener implements Adap
                 intent.putExtra(HTTP_RESULT, http);
                 intent.putExtra(RTSP_RESULT, rtsp);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
+                VideoStreamingUtils.stopPhoneStateListener();
                 break;
         }
 
