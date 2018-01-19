@@ -25,7 +25,7 @@ Add the following lines to your app build.gradle:
 
 ```
 dependencies {
-  compile 'com.github.eurobcreative:napplytics_lib:0.0.3'
+  compile 'com.github.eurobcreative:napplytics_lib:0.0.4'
 }
 ```
 
